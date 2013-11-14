@@ -13,8 +13,14 @@ DATE_FORMAT="%Y-%m-%dT%H:%M:%SZ"
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.sqlite'
 app.config['DEBUG'] = True
+app.config['SECRET_KEY'] = 'LTjzysF0RfSPmmBd'
 
 db = SQLAlchemy(app)
+
+csrf=flask_wtf.csrf.CsrfProtect(app)
+@csrf.error_handler
+def csrf_error(reason):
+    return "Bad CSRF token: "+reason, 400
 
 class NewVacationForm(Form):
     def validate_date(form, date_field):

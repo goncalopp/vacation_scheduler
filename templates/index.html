@@ -12,8 +12,10 @@
                 type: "POST",
                 url: url,
                 data: data,
-                error: function(){
-                    alert('error on post')
+                error: function()
+                    {
+                    alert('An error occurred while sending data to the server. The page will be refreshed')
+                    location.reload()
                     }
                 })
             }

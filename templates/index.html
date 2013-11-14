@@ -1,0 +1,46 @@
+<html>
+<head>
+    <link rel='stylesheet' type='text/css' href='static/fullcalendar/fullcalendar.css' />
+    <script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+    <script type='text/javascript' src='static/fullcalendar/fullcalendar.js'></script>
+
+    <script>
+        function custom_post(url, data)
+            {
+            $.ajax(
+                {
+                type: "POST",
+                url: url,
+                data: data,
+                error: function(){
+                    alert('error on post')
+                    }
+                })
+            }
+
+        function click_day(date, allDay, jsEvent, view) 
+            {
+            newevent= {title: 'my_user', start: date}
+            date_string= $.fullCalendar.formatDate( date, 'u') //ISO8601
+            custom_post('events', {date:date_string})
+            $('#calendar').fullCalendar('renderEvent', newevent)
+            }
+    
+        $(document).ready(
+            function() 
+                {
+                $('#calendar').fullCalendar(
+                    {
+                    dayClick: click_day,
+                    events: '/events' //json url
+                    }
+                    )
+                }
+            );
+    </script>
+</head>
+<body>
+    <h1>Collab employee vacations</h1>
+    <div id='calendar'></div>
+</body>
+</html>

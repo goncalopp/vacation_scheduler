@@ -1,7 +1,14 @@
 from flask import Flask, request, render_template
 from flask.ext.sqlalchemy import SQLAlchemy
+import flask_wtf
+from flask_wtf import Form
+import wtforms
+from wtforms.validators import ValidationError, required
+from wtforms.fields import TextField
 import datetime
 import json
+
+DATE_FORMAT="%Y-%m-%dT%H:%M:%SZ"
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.sqlite'
@@ -9,6 +16,13 @@ app.config['DEBUG'] = True
 
 db = SQLAlchemy(app)
 
+class NewVacationForm(Form):
+    def validate_date(form, date_field):
+        try:
+            datetime.datetime.strptime(date_field.data, DATE_FORMAT)
+        except ValueError:
+            raise ValidationError('Bad date')
+    date = TextField('date', [required(), validate_date])
 
 class Vacation(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -22,7 +36,7 @@ class Vacation(db.Model):
         
 def vacations_to_json(vacations):
     def craft_dict(vacation, title="my_user"):
-        return {"start":vacation.date.strftime("%Y-%m-%dT%H:%M:%SZ"), "title": "my event"}
+        return {"start":vacation.date.strftime(DATE_FORMAT), "title": "my event"}
     return json.dumps(map(craft_dict, vacations))
 
 @app.route('/')
@@ -35,12 +49,14 @@ def events():
         vs= Vacation.query.all()
         return vacations_to_json( vs )
     else:
-        date= request.form['date']
-        date= datetime.datetime.strptime(date, "%Y-%m-%dT%H:%M:%SZ")
-        v= Vacation(date)
-        db.session.add(v)
-        db.session.commit()
-        return ""
+        form= NewVacationForm()
+        if form.validate():
+            date= datetime.datetime.strptime(form.date.data, DATE_FORMAT)
+            v= Vacation(date)
+            db.session.add(v)
+            db.session.commit()
+            return ""
+        return "Bad POST data",400
 
 
 

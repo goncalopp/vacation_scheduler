@@ -6,31 +6,40 @@
     <script type='text/javascript' src='static/fullcalendar/fullcalendar.js'></script>
 
     <script>
-        function custom_post(url, data)
+        function custom_post(url, data, other_options)
             {
             var csrftoken = $('meta[name=csrf_token]').attr('content')
-            $.ajax(
+            options=
                 {
                 type: "POST",
                 url: url,
                 data: data,
-                error: function()
-                    {
-                    alert('An error occurred while sending data to the server. The page will be refreshed')
-                    location.reload()
-                    },
                 beforeSend: function(xhr, settings) 
                     {
                     xhr.setRequestHeader("X-CSRFToken", csrftoken)
                     }
-                })
+                }
+            options= $.extend(options, other_options)
+            $.ajax(options)
+            }
+        
+        function post_or_fail(url, data)
+            {
+            options={
+                error: function()
+                    {
+                    alert('An error occurred while sending data to the server. The page will be refreshed')
+                    location.reload()
+                    }
+                }
+            custom_post(url, data, options)
             }
 
         function click_day(date, allDay, jsEvent, view) 
             {
             newevent= {title: 'my_user', start: date}
             date_string= $.fullCalendar.formatDate( date, 'u') //ISO8601
-            custom_post('events', {date:date_string})
+            post_or_fail('events', {date:date_string})
             $('#calendar').fullCalendar('renderEvent', newevent)
             }
     

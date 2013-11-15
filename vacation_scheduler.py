@@ -27,8 +27,8 @@ class NewVacationForm(Form):
         try:
             datetime.datetime.strptime(date_field.data, DATE_FORMAT)
         except ValueError:
-            raise ValidationError('Bad date')
-    date = TextField('date', [required(), validate_date])
+            raise ValidationError('Bad date format')
+    date = TextField('date', [required(message="date missing"), validate_date])
 
 class Vacation(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -62,7 +62,10 @@ def events():
             db.session.add(v)
             db.session.commit()
             return ""
-        return "Bad POST data",400
+        return form_errors_as_text(form),400
+
+def form_errors_as_text( form ):
+    return ",".join([",".join(x) for x in form.errors.values()])
 
 
 

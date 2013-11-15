@@ -4,6 +4,11 @@
     <link rel='stylesheet' type='text/css' href='static/fullcalendar/fullcalendar.css' />
     <script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
     <script type='text/javascript' src='static/fullcalendar/fullcalendar.js'></script>
+    
+    <link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.min.css" />
+    <link rel="stylesheet" href="static/site_style.css" />
+    <script src="http://code.jquery.com/ui/1.10.3/jquery-ui.min.js"></script>
+
 
     <script>
         function custom_post(url, data, other_options)
@@ -46,6 +51,7 @@
         $(document).ready(
             function() 
                 {
+                show_login_dialog()
                 $('#calendar').fullCalendar(
                     {
                     dayClick: click_day,
@@ -59,5 +65,6 @@
 <body>
     <h1>Collab employee vacations</h1>
     <div id='calendar'></div>
+    {% include 'login-dialog.html' %}
 </body>
 </html>

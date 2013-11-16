@@ -93,10 +93,10 @@ function click_event(event)
     click_day(event.start)
     }
 
-function show_login_dialog()
-    { 
+function setup_login_dialog()
+    {
     $( "#login-button" ).button()
-    $( "#login-dialog" ).dialog({modal: true});
+    $( "#login-dialog" ).dialog({modal: true, autoOpen: false});
     $( "#"+get_password_id() ).keyup(
         function(event)
             {
@@ -107,6 +107,11 @@ function show_login_dialog()
             }
         );
     $( "#login-button").click( post_login )
+    }
+    
+function show_login_dialog()
+    { 
+    $( "#login-dialog" ).dialog( "open" );
     }
 
 function post_login()

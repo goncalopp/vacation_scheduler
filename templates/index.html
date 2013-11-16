@@ -92,7 +92,8 @@
         $(document).ready(
             function() 
                 {
-                show_login_dialog()
+                $( "#show-login-button" ).button()
+                $( "#show-login-button" ).click(show_login_dialog)
                 $('#calendar').fullCalendar(
                     {
                     dayClick: click_day,
@@ -106,6 +107,13 @@
 </head>
 <body>
     <h1>Collab employee vacations</h1>
+    {% if current_user.is_authenticated() %}
+    <h3>{{current_user.username}}</h3>
+    {% else %}
+    <input id="show-login-button" type=button value="Login"/>
+    <br/><br/>
+    {% endif %}
+     
     <div id='calendar'></div>
     {% include 'login-dialog.html' %}
 </body>

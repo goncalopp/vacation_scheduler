@@ -23,6 +23,7 @@ def events():
             date= string_to_date(form.date.data)
             v= Vacation(date, current_user)
             db.session.add(v)
+            current_user.info.available_vacation_days-=1
             db.session.commit()
             return ""
         return form_errors_as_text(form),400

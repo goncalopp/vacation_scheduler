@@ -1,7 +1,7 @@
 from flask_wtf import Form
 from wtforms import validators
 from wtforms.validators import ValidationError, Length, required
-from wtforms.fields import TextField, PasswordField
+from wtforms.fields import TextField, PasswordField, BooleanField
 from misc import string_to_date
 
 class NewVacationForm(Form):
@@ -11,6 +11,7 @@ class NewVacationForm(Form):
         except ValueError:
             raise ValidationError('Bad date format')
     date = TextField('date', [required(message="date missing"), validate_date])
+    delete= BooleanField('delete')
 
 class LoginForm(Form):
     username = TextField('Username', [required(message="No username provided"), Length(max=30)])

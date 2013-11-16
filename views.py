@@ -15,18 +15,28 @@ def events():
     if request.method=='GET':
         vs= Vacation.query.all()
         return vacations_to_json( vs, current_user )
-    else:
-        if not current_user.is_authenticated():
-            return "You need to login to add events", 403
-        form= NewVacationForm()
-        if form.validate():
-            date= string_to_date(form.date.data)
-            v= Vacation(date, current_user)
-            db.session.add(v)
-            current_user.info.available_vacation_days-=1
-            db.session.commit()
-            return ""
+    if not current_user.is_authenticated():
+        return "You need to login to add events", 403
+    form= NewVacationForm()
+    if not form.validate():
         return form_errors_as_text(form),400
+    date= string_to_date(form.date.data).date()
+    sameday_events= Vacation.query.filter( Vacation.date == date ).filter( Vacation.user == current_user ).all()
+    print "SAMEDAY", sameday_events
+    if form.delete.data:
+        if len(sameday_events)!=1:
+            return "Tried to delete inexistent event (or more than one event on same day)", 400
+        db.session.delete(sameday_events[0])
+        current_user.info.available_vacation_days+=1
+    else:
+        if len(sameday_events)!=0:
+            return "Tried to add an event to a day with a event already in it.",400
+        v= Vacation(date, current_user)
+        db.session.add(v)
+        current_user.info.available_vacation_days-=1
+    db.session.commit()
+    return ""
+
 
 @app.route('/login', methods=['GET','POST'])
 def login():

@@ -14,7 +14,7 @@ def index():
 def events():
     if request.method=='GET':
         vs= Vacation.query.all()
-        return vacations_to_json( vs )
+        return vacations_to_json( vs, current_user )
     else:
         if not current_user.is_authenticated():
             return "You need to login to add events", 403

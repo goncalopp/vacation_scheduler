@@ -2,9 +2,13 @@ import datetime
 import json
 
 
-def vacations_to_json(vacations):
-    def craft_dict(vacation, title="my_user"):
-        return {"start":date_to_string(vacation.date), "title": "my event"}
+def vacations_to_json(vacations, current_user):
+    def craft_dict(vacation):
+        return {
+            "start": date_to_string(vacation.date), 
+            "title": vacation.user.username,
+            "color": "#aa0000" if current_user==vacation.user else "#0000aa"
+            }
     return json.dumps(map(craft_dict, vacations))
 
 DATE_FORMAT="%Y-%m-%dT%H:%M:%SZ"

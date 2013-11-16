@@ -77,7 +77,7 @@
             deleted_any= delete_user_events_in_date(date, remote_event_delete)
             if (!deleted_any)
                 {
-                newevent= {title: get_authenticated_user(), start: date}
+                newevent= {title: get_authenticated_user(), start: date, color: "#aa0000"}
                 date_string= $.fullCalendar.formatDate( date, 'u') //ISO8601
                 post_or_fail('events', {date:date_string})
                 $('#calendar').fullCalendar('renderEvent', newevent)

@@ -2,6 +2,10 @@
 <head>
     <meta name="csrf_token" content="{{ csrf_token() }}" />
     <meta name="authenticated_user" content="{{ current_user.username }}" />
+    <meta name="login_form_username_id" content="{{ login_form.username.id }}" />
+    <meta name="login_form_password_id" content="{{ login_form.password.id }}" />
+    
+    
     <link rel='stylesheet' type='text/css' href='static/fullcalendar/fullcalendar.css' />
     <script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
     <script type='text/javascript' src='static/fullcalendar/fullcalendar.js'></script>

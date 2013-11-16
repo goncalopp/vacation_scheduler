@@ -1,6 +1,25 @@
+function get_authenticated_user()
+    {
+    return $('meta[name=authenticated_user]').attr('content')
+    }
+
+function get_csrf_token()
+    {
+    return $('meta[name=csrf_token]').attr('content')
+    }
+
+function get_username_id()
+    {
+    return $('meta[name=login_form_username_id]').attr('content')
+    }
+
+function get_password_id()
+    {
+    return $('meta[name=login_form_password_id]').attr('content')
+    }
+
 function custom_post(url, data, other_options)
     {
-    var csrftoken = $('meta[name=csrf_token]').attr('content')
     options=
         {
         type: "POST",
@@ -8,7 +27,7 @@ function custom_post(url, data, other_options)
         data: data,
         beforeSend: function(xhr, settings) 
             {
-            xhr.setRequestHeader("X-CSRFToken", csrftoken)
+            xhr.setRequestHeader("X-CSRFToken", get_csrf_token())
             }
         }
     options= $.extend(options, other_options)
@@ -25,11 +44,6 @@ function post_or_fail(url, data)
             }
         }
     custom_post(url, data, options)
-    }
-
-function get_authenticated_user()
-    {
-    return $('meta[name=authenticated_user]').attr('content')
     }
     
 function delete_user_events_in_date(date, callback)
@@ -77,4 +91,40 @@ function click_day(date, allDay, jsEvent, view)
 function click_event(event)
     {
     click_day(event.start)
+    }
+
+function show_login_dialog()
+    { 
+    $( "#login-button" ).button()
+    $( "#login-dialog" ).dialog({modal: true});
+    $( "#"+get_password_id() ).keyup(
+        function(event)
+            {
+            if(event.keyCode == 13)
+                {
+                $("#login-button").click();
+                }
+            }
+        );
+    $( "#login-button").click( post_login )
+    }
+
+function post_login()
+    {
+    username = $( "#"+get_username_id() )[0].value
+    password = $( "#"+get_password_id() )[0].value
+    options={
+        error: function(request)
+            {
+            tips = $( "#login-errors" );
+            tips.text(request.responseText)
+            },
+        success: function(request)
+            {
+            tips = $( "#login-errors" );
+            tips.text()
+            location.reload()
+            }
+        }
+    custom_post('login', {username:username, password:password}, options)
     }

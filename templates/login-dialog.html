@@ -1,46 +1,5 @@
 {% from "_formhelpers.html" import render_field %}
 
-<script>
-function show_login_dialog()
-    { 
-    $( "#login-button" ).button()
-    $( "#login-dialog" ).dialog({modal: true});
-    $( "#{{login_form.password.id}}").keyup(
-        function(event)
-            {
-            if(event.keyCode == 13)
-                {
-                $("#login-button").click();
-                }
-            }
-        );
-    $( "#login-button").click( post_login )
-    }
-
-function post_login()
-    {
-    var username = $( "#{{login_form.username.id}}" )[0].value
-    var password = $( "#{{login_form.password.id}}" )[0].value
-    options={
-        error: function(request)
-            {
-            tips = $( "#login-errors" );
-            tips.text(request.responseText)
-            },
-        success: function(request)
-            {
-            tips = $( "#login-errors" );
-            tips.text()
-            location.reload()
-            }
-        }
-    custom_post('login', {username:username, password:password}, options)
-    }
-        
-</script>
-
-
-
 <div id="login-dialog" title="Login" class="mydialog">
     <div id="login-dialog-content" class="ui-dialog-contentz">
         <form method=post action="/login">

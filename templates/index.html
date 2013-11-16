@@ -75,6 +75,8 @@
                 
         function click_day(date, allDay, jsEvent, view) 
             {
+            if (!get_authenticated_user())
+                return
             deleted_any= delete_user_events_in_date(date, remote_event_delete)
             if (!deleted_any)
                 {

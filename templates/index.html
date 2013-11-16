@@ -1,6 +1,7 @@
 <html>
 <head>
     <meta name="csrf_token" content="{{ csrf_token() }}" />
+    <meta name="authenticated_user" content="{{ current_user.username }}" />
     <link rel='stylesheet' type='text/css' href='static/fullcalendar/fullcalendar.css' />
     <script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
     <script type='text/javascript' src='static/fullcalendar/fullcalendar.js'></script>
@@ -39,13 +40,48 @@
                 }
             custom_post(url, data, options)
             }
+        
+        function get_authenticated_user()
+            {
+            return $('meta[name=authenticated_user]').attr('content')
+            }
+            
+        function delete_user_events_in_date(date, callback)
+            {
+            deleted_any= false
+            user= get_authenticated_user()
+            function shall_delete(event)
+                {
+                same_date= (String(event.start)==String(date))
+                same_user= (event.title==user)
+                del= (same_date && same_user)
+                if (del)
+                    {
+                    deleted_any=true
+                    callback(event)
+                    }
+                return del
+                }
+            $('#calendar').fullCalendar( 'removeEvents', shall_delete)
+            return deleted_any
+            }
 
+        function remote_event_delete( event )
+                {
+                date_string= $.fullCalendar.formatDate( event.start, 'u') //ISO8601
+                post_or_fail('events', {date:date_string, delete:true})
+                }
+                
         function click_day(date, allDay, jsEvent, view) 
             {
-            newevent= {title: 'my_user', start: date}
-            date_string= $.fullCalendar.formatDate( date, 'u') //ISO8601
-            post_or_fail('events', {date:date_string})
-            $('#calendar').fullCalendar('renderEvent', newevent)
+            deleted_any= delete_user_events_in_date(date, remote_event_delete)
+            if (!deleted_any)
+                {
+                newevent= {title: get_authenticated_user(), start: date}
+                date_string= $.fullCalendar.formatDate( date, 'u') //ISO8601
+                post_or_fail('events', {date:date_string})
+                $('#calendar').fullCalendar('renderEvent', newevent)
+                }
             }
     
         $(document).ready(

@@ -8,7 +8,7 @@ from flask.ext.login import login_user, current_user
 
 @app.route('/')
 def index():
-    return render_template('index.html', login_form=LoginForm())
+    return render_template('index.html', login_form=LoginForm(), current_user=current_user)
 
 @app.route('/events', methods=['GET','POST'])
 def events():

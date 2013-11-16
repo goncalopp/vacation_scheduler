@@ -3,9 +3,11 @@ from db import db
 class Vacation(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     date= db.Column(db.Date)
-
-    def __init__(self, date):
+    username = db.Column(db.String(30), db.ForeignKey('user.username'))
+    user = db.relationship('User', backref=db.backref('vacations', lazy='dynamic'))
+    def __init__(self, date, user):
         self.date = date
+        self.user= user
 
     def __repr__(self):
         return str(self.date)

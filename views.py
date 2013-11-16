@@ -16,10 +16,12 @@ def events():
         vs= Vacation.query.all()
         return vacations_to_json( vs )
     else:
+        if not current_user.is_authenticated():
+            return "You need to login to add events", 403
         form= NewVacationForm()
         if form.validate():
             date= string_to_date(form.date.data)
-            v= Vacation(date)
+            v= Vacation(date, current_user)
             db.session.add(v)
             db.session.commit()
             return ""

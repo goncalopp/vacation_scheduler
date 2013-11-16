@@ -83,6 +83,11 @@
                 $('#calendar').fullCalendar('renderEvent', newevent)
                 }
             }
+        
+        function click_event(event)
+            {
+            delete_user_events_in_date(event.start, remote_event_delete)
+            }
     
         $(document).ready(
             function() 
@@ -91,6 +96,7 @@
                 $('#calendar').fullCalendar(
                     {
                     dayClick: click_day,
+                    eventClick: click_event,
                     events: '/events' //json url
                     }
                     )

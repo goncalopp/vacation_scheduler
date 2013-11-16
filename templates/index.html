@@ -59,6 +59,7 @@
                     {
                     deleted_any=true
                     callback(event)
+                    $("#available-vacations").text(Number($("#available-vacations").text())+1)
                     }
                 return del
                 }
@@ -81,6 +82,7 @@
                 date_string= $.fullCalendar.formatDate( date, 'u') //ISO8601
                 post_or_fail('events', {date:date_string})
                 $('#calendar').fullCalendar('renderEvent', newevent)
+                $("#available-vacations").text($("#available-vacations").text()-1)
                 }
             }
         
@@ -109,6 +111,10 @@
     <h1>Collab employee vacations</h1>
     {% if current_user.is_authenticated() %}
     <h3>{{current_user.username}}</h3>
+    <dl>
+    <dt>Available vacation days:</dt>
+    <dd id=available-vacations>{{available_days}}</dd>
+    </dl>
     {% else %}
     <input id="show-login-button" type=button value="Login"/>
     <br/><br/>

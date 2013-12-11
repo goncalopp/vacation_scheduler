@@ -1,17 +1,40 @@
+# coding=utf-8
+
 from db import db
 from misc import string_to_date, calculate_vacation_days_since
 
 class Vacation(db.Model):
+    types= {
+        "vacation":     0, 
+        "sick_leave":   1, 
+        "child_birth":  2, 
+        "training":     3, 
+        "other":        99,
+        }
+    
     id = db.Column(db.Integer, primary_key=True)
+    type = db.Column(db.Integer)
     date= db.Column(db.Date)
     username = db.Column(db.String(30), db.ForeignKey('user.username'))
     user = db.relationship('User', backref=db.backref('vacations', lazy='dynamic'))
-    def __init__(self, date, user):
+    def __init__(self, date, user, type):
         self.date = date
         self.user= user
+        self.type=type
 
     def __repr__(self):
         return str(self.date)
+    
+    def getReadableType(self):
+        '''returns the human-readable type of this vacation'''
+        hrtd= {
+            0:u"",
+            1:u"baixa",
+            2:u"parto",
+            3:u"formação",
+            99:u"outro",
+            }
+        return hrtd.get(self.type) or ""
 
 
 class User(db.Model):

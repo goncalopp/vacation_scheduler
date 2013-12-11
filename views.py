@@ -33,7 +33,7 @@ def events():
     else:
         if len(sameday_events)!=0:
             return "Tried to add an event to a day with a event already in it.",400
-        v= Vacation(date, current_user)
+        v= Vacation(date, current_user, Vacation.types["vacation"])
         db.session.add(v)
         current_user.info.available_vacation_days-=1
     db.session.commit()

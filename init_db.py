@@ -9,8 +9,8 @@ bob= User("bob", "bob")
 db.session.add( alice )
 db.session.add( bob )
 
-v1=Vacation(date(2013, 11, 14), alice)
-v2=Vacation(date(2013, 11, 15), bob)
+v1=Vacation(date(2013, 11, 14), alice, Vacation.types["vacation"])
+v2=Vacation(date(2013, 11, 15), bob, Vacation.types["vacation"])
 db.session.add(v1)
 db.session.add(v2)
 

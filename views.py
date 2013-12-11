@@ -9,8 +9,9 @@ from flask.ext.login import login_user, current_user
 @app.route('/')
 def index():
     available_days= current_user.info.available_vacation_days if current_user.is_authenticated() else 0
+    event_types= Vacation.readable_types.items()
     return render_template('index.html', login_form=LoginForm(), 
-        current_user=current_user, available_days= available_days)
+        current_user=current_user, available_days= available_days, event_types=event_types)
 
 @app.route('/events', methods=['GET','POST'])
 def events():
@@ -23,19 +24,22 @@ def events():
     if not form.validate():
         return form_errors_as_text(form),400
     date= string_to_date(form.date.data).date()
+    vtype= form.type.data
     sameday_events= Vacation.query.filter( Vacation.date == date ).filter( Vacation.user == current_user ).all()
     print "SAMEDAY", sameday_events
     if form.delete.data:
         if len(sameday_events)!=1:
             return "Tried to delete inexistent event (or more than one event on same day)", 400
         db.session.delete(sameday_events[0])
-        current_user.info.available_vacation_days+=1
+        if sameday_events[0].type==0:
+            current_user.info.available_vacation_days+=1
     else:
         if len(sameday_events)!=0:
             return "Tried to add an event to a day with a event already in it.",400
-        v= Vacation(date, current_user, Vacation.types["vacation"])
+        v= Vacation(date, current_user, vtype)
         db.session.add(v)
-        current_user.info.available_vacation_days-=1
+        if vtype==0:
+            current_user.info.available_vacation_days-=1
     db.session.commit()
     return ""
 

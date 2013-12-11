@@ -11,6 +11,13 @@ class Vacation(db.Model):
         "training":     3, 
         "other":        99,
         }
+    readable_types= {
+        0:u"",
+        1:u"baixa",
+        2:u"parto",
+        3:u"formação",
+        99:u"outro",
+        }
     
     id = db.Column(db.Integer, primary_key=True)
     type = db.Column(db.Integer)
@@ -27,15 +34,7 @@ class Vacation(db.Model):
     
     def getReadableType(self):
         '''returns the human-readable type of this vacation'''
-        hrtd= {
-            0:u"",
-            1:u"baixa",
-            2:u"parto",
-            3:u"formação",
-            99:u"outro",
-            }
-        return hrtd.get(self.type) or ""
-
+        return Vacation.readable_types.get(self.type, "")
 
 class User(db.Model):
     username= db.Column(db.String(30), primary_key=True)

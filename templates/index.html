@@ -36,12 +36,22 @@
 </head>
 <body>
     <h1>Collab employee vacations</h1>
+    
     {% if current_user.is_authenticated() %}
     <h3>{{current_user.username}}</h3>
+    
+    <select class="ui-widget ui-widget-content ui-state-default ui-corner-left" id="event-type" onChange="event_type_change(this)">
+    {% for event_type in event_types %}
+        <option value="{{event_type[0]}}">{{event_type[1]}}</option>
+        {% endfor %}
+    </select> 
+    
     <dl>
     <dt>Available vacation days:</dt>
     <dd id=available-vacations>{{available_days}}</dd>
     </dl>
+    
+    
     {% else %}
     <input id="show-login-button" type=button value="Login"/>
     <br/><br/>

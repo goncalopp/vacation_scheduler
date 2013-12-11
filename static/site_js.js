@@ -53,13 +53,15 @@ function delete_user_events_in_date(date, callback)
     function shall_delete(event)
         {
         same_date= (String(event.start)==String(date))
-        same_user= (event.title==user)
+        same_user= (event.title.substr(0,user.length)==user)
+        is_vacation= event.title==user
         del= (same_date && same_user)
         if (del)
             {
             deleted_any=true
             callback(event)
-            $("#available-vacations").text(Number($("#available-vacations").text())+1)
+            if (is_vacation)
+                $("#available-vacations").text(Number($("#available-vacations").text())+1)
             }
         return del
         }
@@ -80,11 +82,17 @@ function click_day(date, allDay, jsEvent, view)
     deleted_any= delete_user_events_in_date(date, remote_event_delete)
     if (!deleted_any)
         {
-        newevent= {title: get_authenticated_user(), start: date, color: "#aa0000"}
+        type= $("#event-type").val()
+        typestring= $("#event-type option:selected").text()
+        title= get_authenticated_user()
+        if (typestring!="")
+            title+=" ("+typestring+")"
+        newevent= {title: title, start: date, color: "#aa0000"}
         date_string= $.fullCalendar.formatDate( date, 'u') //ISO8601
-        post_or_fail('events', {date:date_string})
+        post_or_fail('events', {date:date_string, type:type})
         $('#calendar').fullCalendar('renderEvent', newevent)
-        $("#available-vacations").text($("#available-vacations").text()-1)
+        if (type==0)
+            $("#available-vacations").text($("#available-vacations").text()-1)
         }
     }
 

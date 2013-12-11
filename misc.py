@@ -4,10 +4,11 @@ import json
 
 def vacations_to_json(vacations, current_user):
     def craft_dict(vacation):
+        vtype= vacation.getReadableType()
         return {
             "start": date_to_string(vacation.date), 
-            "title": vacation.user.username,
-            "color": "#aa0000" if current_user==vacation.user else "#0000aa"
+            "title": vacation.user.username + (" ("+vtype+")" if vtype else ""),
+            "color": "#aa0000" if current_user==vacation.user else "#0000aa",
             }
     return json.dumps(map(craft_dict, vacations))
 

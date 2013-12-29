@@ -119,6 +119,16 @@ class UserYearlyArchive(db.Model):
             return n_months*self.user.info.vacations_per_month - self.used_vacations
         else:
             return self.total_vacations - self.used_vacations
+    
+    def getScheduledVacations(self):
+        '''get the number of user scheduled vacations this year'''
+        start_date, end_date= datetime(year=self.year, month=1, day=1), datetime(year=self.year+1, month=1, day=1)
+        return Vacation.query.filter( Vacation.user == self.user ).filter( Vacation.date >= start_date ).filter( Vacation.date < end_date ).filter( Vacation.type==0 ).count()
+    
+    def getUsedVacations(self):
+        '''gets the number of user scheduled vacations this year that
+        have already occurred'''
+        return self.used_vacations
 
 def delete_vacation(vacation, commit=True):
     uyc= UserYearlyArchive.getOrCreate(vacation.user, vacation.date.year, commit=False)

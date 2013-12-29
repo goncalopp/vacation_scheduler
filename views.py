@@ -8,7 +8,7 @@ from flask.ext.login import login_user, current_user
 
 @app.route('/')
 def index():
-    available_days= current_user.info.available_vacation_days if current_user.is_authenticated() else 0
+    available_days= UserYearlyArchive.getOrCreate(current_user).getAvailableVacations() if current_user.is_authenticated() else 0
     event_types= Vacation.readable_types.items()
     return render_template('index.html', login_form=LoginForm(), 
         current_user=current_user, available_days= available_days, event_types=event_types)
@@ -30,17 +30,11 @@ def events():
     if form.delete.data:
         if len(sameday_events)!=1:
             return "Tried to delete inexistent event (or more than one event on same day)", 400
-        db.session.delete(sameday_events[0])
-        if sameday_events[0].type==0:
-            current_user.info.available_vacation_days+=1
+        delete_vacation(sameday_events[0])
     else:
         if len(sameday_events)!=0:
             return "Tried to add an event to a day with a event already in it.",400
-        v= Vacation(date, current_user, vtype)
-        db.session.add(v)
-        if vtype==0:
-            current_user.info.available_vacation_days-=1
-    db.session.commit()
+        add_vacation(date, current_user, vtype)
     return ""
 
 

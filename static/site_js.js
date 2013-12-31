@@ -54,14 +54,11 @@ function delete_user_events_in_date(date, callback)
         {
         same_date= (String(event.start)==String(date))
         same_user= (event.title.substr(0,user.length)==user)
-        is_vacation= event.title==user
         del= (same_date && same_user)
         if (del)
             {
             deleted_any=true
             callback(event)
-            if (is_vacation)
-                $("#available-vacations").text(Number($("#available-vacations").text())+1)
             }
         return del
         }
@@ -91,9 +88,13 @@ function click_day(date, allDay, jsEvent, view)
         date_string= $.fullCalendar.formatDate( date, 'u') //ISO8601
         post_or_fail('events', {date:date_string, type:type})
         $('#calendar').fullCalendar('renderEvent', newevent)
-        if (type==0)
-            $("#available-vacations").text($("#available-vacations").text()-1)
         }
+    refresh_statistics()
+    }
+
+function refresh_statistics()
+    {
+    $("#statistics").load("/statistics")
     }
 
 function click_event(event)

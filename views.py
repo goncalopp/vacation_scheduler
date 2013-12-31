@@ -8,15 +8,27 @@ from flask.ext.login import login_user, current_user
 
 @app.route('/')
 def index():
+    event_types= Vacation.readable_types.items()
+    return render_template('index.html', login_form=LoginForm(), 
+        current_user=current_user, event_types=event_types, 
+        **statistics(getDict=True) )
+
+@app.route('/statistics')
+def statistics(getDict=False):
     au= current_user.is_authenticated()
     available_days= UserYearlyArchive.getOrCreate(current_user).getAvailableVacations() if au else 0
     scheduled_days= UserYearlyArchive.getOrCreate(current_user).getScheduledVacations() if au else 0
     used_days= UserYearlyArchive.getOrCreate(current_user).getUsedVacations() if au else 0
-    
-    event_types= Vacation.readable_types.items()
-    return render_template('index.html', login_form=LoginForm(), 
-        current_user=current_user, available_days= available_days, scheduled_days= scheduled_days,
-        used_days= used_days, event_types=event_types)
+    d= { "available_days":  available_days, 
+        "scheduled_days":   scheduled_days,
+        "used_days":        used_days,
+        }
+    if getDict:
+        return d
+    else:
+        return render_template('statistics.html', **d)
+
+
 
 @app.route('/events', methods=['GET','POST'])
 def events():

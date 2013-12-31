@@ -31,7 +31,6 @@ def events():
     date= string_to_date(form.date.data).date()
     vtype= form.type.data
     sameday_events= Vacation.query.filter( Vacation.date == date ).filter( Vacation.user == current_user ).all()
-    print "SAMEDAY", sameday_events
     if form.delete.data:
         if len(sameday_events)!=1:
             return "Tried to delete inexistent event (or more than one event on same day)", 400
@@ -49,7 +48,6 @@ def login():
         return render_template('login.html')
     else:
         form= LoginForm()
-        print "LOGIN",form.username.data, form.password.data
         if form.validate():
             user= User.query.get(form.username.data)
             if user is None:

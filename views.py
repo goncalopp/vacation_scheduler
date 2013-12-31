@@ -49,7 +49,7 @@ def login():
         return render_template('login.html')
     else:
         form= LoginForm()
-        print "LOGIN",form.username, form.password
+        print "LOGIN",form.username.data, form.password.data
         if form.validate():
             user= User.query.get(form.username.data)
             if user is None:

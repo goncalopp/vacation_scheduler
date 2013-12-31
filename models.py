@@ -2,7 +2,7 @@
 
 from db import db
 from misc import string_to_date
-from datetime import datetime
+from datetime import datetime,date
 
 class Vacation(db.Model):
     types= {
@@ -64,9 +64,6 @@ class UserVacationInfo(db.Model):
     vacations_per_year= db.Column(db.Integer)
     vacations_per_month= db.Column(db.Integer) #for first year
     
-    
-    available_vacation_days= db.Column(db.Integer) #cache, must be update on even add/remove
-    
     def __init__(self, user, join_date, vacations_per_year, vacations_per_month):
         self.join_date= string_to_date(join_date)
         self.user= user
@@ -122,7 +119,7 @@ class UserYearlyArchive(db.Model):
     
     def getScheduledVacations(self):
         '''get the number of user scheduled vacations this year'''
-        start_date, end_date= datetime(year=self.year, month=1, day=1), datetime(year=self.year+1, month=1, day=1)
+        start_date, end_date= date(year=self.year, month=1, day=1), date(year=self.year+1, month=1, day=1)
         return Vacation.query.filter( Vacation.user == self.user ).filter( Vacation.date >= start_date ).filter( Vacation.date < end_date ).filter( Vacation.type==0 ).count()
     
     def getUsedVacations(self):

@@ -37,9 +37,9 @@ function custom_post(url, data, other_options)
 function post_or_fail(url, data)
     {
     options={
-        error: function()
+        error: function(request)
             {
-            alert('An error occurred while sending data to the server. The page will be refreshed')
+            alert('An error occurred while sending data to the server. The page will be refreshed\n'+request.responseText)
             location.reload()
             }
         }

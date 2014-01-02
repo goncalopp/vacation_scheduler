@@ -6,8 +6,12 @@ from misc import vacations_to_json, form_errors_as_text, DATE_FORMAT
 from flask import request, render_template
 from flask.ext.login import login_user, current_user
 
+from app_log import get_logger
+log= get_logger(__name__)
+
 @app.route('/')
 def index():
+    log.info("GET index for %s", current_user)
     event_types= Vacation.readable_types.items()
     return render_template('index.html', login_form=LoginForm(), 
         current_user=current_user, event_types=event_types, 
@@ -15,6 +19,7 @@ def index():
 
 @app.route('/statistics')
 def statistics(getDict=False):
+    log.info("GET statistics for %s", current_user)
     au= current_user.is_authenticated()
     try:
         if not au:
@@ -41,8 +46,10 @@ def statistics(getDict=False):
 @app.route('/events', methods=['GET','POST'])
 def events():
     if request.method=='GET':
+        log.info("GET events for %s", current_user)
         vs= Vacation.query.all()
         return vacations_to_json( vs, current_user )
+    log.info("POST events for %s", current_user)
     if not current_user.is_authenticated():
         return "You need to login to add events", 403
     form= NewVacationForm()
@@ -65,8 +72,10 @@ def events():
 @app.route('/login', methods=['GET','POST'])
 def login():
     if request.method=='GET':
+        log.info("GET login")
         return render_template('login.html')
     else:
+        log.info("POST login")
         form= LoginForm()
         if form.validate():
             user= User.query.get(form.username.data)
@@ -74,6 +83,7 @@ def login():
                 return "No such user", 404
             if user.password!=form.password.data:
                 return "Bad password", 400
+            log.info(unicode(user)+" logged in")
             login_user(user)
             return ""
         return form_errors_as_text(form),400

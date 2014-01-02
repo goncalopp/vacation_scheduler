@@ -1,5 +1,6 @@
 import datetime
 import json
+import unicodedata
 
 
 def vacations_to_json(vacations, current_user):
@@ -27,3 +28,7 @@ def string_to_date( s ):
         return datetime.datetime.strptime(s, DATETIME_FORMAT)
     except ValueError:
         return datetime.datetime.strptime(s, DATE_FORMAT).date()
+
+def unisafe(s):
+    '''unicode to ascii string'''
+    return unicodedata.normalize('NFKD',unicode(s)).encode('ascii','ignore')

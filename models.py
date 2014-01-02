@@ -1,8 +1,11 @@
 # coding=utf-8
 
 from db import db
-from misc import string_to_date
+from misc import string_to_date, unisafe
 from datetime import datetime,date
+
+from app_log import get_logger
+log= get_logger(__name__)
 
 class Vacation(db.Model):
     types= {
@@ -29,13 +32,15 @@ class Vacation(db.Model):
         self.date = date
         self.user= user
         self.type=type
+        log.debug("Created %s", self)
 
-    def __repr__(self):
-        return str(self.date)
     
     def getReadableType(self):
         '''returns the human-readable type of this vacation'''
         return Vacation.readable_types.get(self.type, "")
+    
+    def __repr__(self):
+        return "Vacation<"+",".join(map(str,(self.user, self.date, self.type)))+">"
 
 class User(db.Model):
     username= db.Column(db.String(30), primary_key=True)
@@ -44,6 +49,7 @@ class User(db.Model):
     def __init__(self, username, password):
         self.username= username
         self.password= password
+        log.info("Created %s", self)
     
     def is_anonymous(self):     #flask-login
         return False
@@ -56,6 +62,9 @@ class User(db.Model):
 
     def get_id(self):           #flask-login
         return unicode(self.username)
+    
+    def __repr__(self):
+        return unisafe("User<"+self.username+">")
 
 class UserVacationInfo(db.Model):
     username = db.Column(db.String(30), db.ForeignKey('user.username'), primary_key=True)
@@ -68,7 +77,14 @@ class UserVacationInfo(db.Model):
         self.join_date= string_to_date(join_date)
         self.user= user
         self.vacations_per_year= vacations_per_year
-        self.vacations_per_month= vacations_per_month 
+        self.vacations_per_month= vacations_per_month
+        log.info("Created %s: %s", self, ", ".join(map(str,(
+            vacations_per_year, 
+            vacations_per_month,
+            ))))
+    
+    def __repr__(self):
+        return "UserVacationInfo<"+str(self.user)+">"
 
 class UserYearlyArchive(db.Model):
     username = db.Column(db.String(30), db.ForeignKey('user.username'), primary_key=True)
@@ -84,6 +100,11 @@ class UserYearlyArchive(db.Model):
         self.used_vacations= 0
         self.total_vacations= UserYearlyArchive.totalVacations(user, year)
         self.inherited_vacations= UserYearlyArchive.inheritedVacations(user, year)
+        log.info("Created %s: %s", self, ", ".join(map(str,(
+            self.used_vacations, 
+            self.total_vacations, 
+            self.inherited_vacations,
+            ))))
     
     @staticmethod
     def totalVacations(user, year):
@@ -144,6 +165,9 @@ class UserYearlyArchive(db.Model):
         '''gets the number of user scheduled vacations this year that
         have already occurred'''
         return self.used_vacations
+    
+    def __repr__(self):
+        return "UserYearlyArchive<"+",".join(map(str, (self.user, self.year)))+">"
 
 class ArchiveBeforeJoin( Exception ):
     '''Tried to get or create archive from year before user joined the company'''
@@ -151,6 +175,7 @@ class ArchiveBeforeJoin( Exception ):
 
 def delete_vacation(vacation, commit=True):
     uyc= UserYearlyArchive.getOrCreate(vacation.user, vacation.date.year, commit=False)
+    log.info("deleted %s", vacation)
     if vacation.type==0:
         uyc.used_vacations-=1
     db.session.delete(vacation)
@@ -166,3 +191,4 @@ def add_vacation(date, user, vtype=0, commit=True):
     db.session.add(uyc)
     if commit:
         db.session.commit()
+    log.info("created %s", v)

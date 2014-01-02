@@ -34,7 +34,7 @@ function custom_post(url, data, other_options)
     $.ajax(options)
     }
 
-function post_or_fail(url, data)
+function post_or_fail(url, data, other_options)
     {
     options={
         error: function(request)
@@ -43,6 +43,7 @@ function post_or_fail(url, data)
             location.reload()
             }
         }
+    options= $.extend(options, other_options)
     custom_post(url, data, options)
     }
     
@@ -69,7 +70,7 @@ function delete_user_events_in_date(date, callback)
 function remote_event_delete( event )
         {
         date_string= $.fullCalendar.formatDate( event.start, 'u') //ISO8601
-        post_or_fail('events', {date:date_string, delete:true})
+        post_or_fail('events', {date:date_string, delete:true}, {async:false})
         }
         
 function click_day(date, allDay, jsEvent, view) 
@@ -86,7 +87,7 @@ function click_day(date, allDay, jsEvent, view)
             title+=" ("+typestring+")"
         newevent= {title: title, start: date, color: "#aa0000"}
         date_string= $.fullCalendar.formatDate( date, 'u') //ISO8601
-        post_or_fail('events', {date:date_string, type:type})
+        post_or_fail('events', {date:date_string, type:type}, {async:false})
         $('#calendar').fullCalendar('renderEvent', newevent)
         }
     refresh_statistics()

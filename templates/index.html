@@ -35,10 +35,10 @@
     
 </head>
 <body>
-    <h1>Collab employee vacations</h1>
     
     {% if current_user.is_authenticated() %}
-    <h3>{{current_user.username}}</h3>
+    <h2>{{current_user.username}}</h2>
+    
     
     <select class="ui-widget ui-widget-content ui-state-default ui-corner-left" id="event-type" onChange="event_type_change(this)">
     {% for event_type in event_types %}

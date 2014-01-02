@@ -5,3 +5,22 @@
 .validationerrors {
     color: red
     }
+
+.statistics
+    {
+    position:absolute;
+    right:170px;
+    left:150px;
+    }
+
+.statistic
+    {
+    float:right;
+    width:110px;
+    }
+    
+.event-type-selector
+    {
+    position:absolute;
+    left:200px;
+    }

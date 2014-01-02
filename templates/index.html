@@ -45,17 +45,20 @@
         <option value="{{event_type[0]}}">{{event_type[1]}}</option>
         {% endfor %}
     </select> 
-    
-    <div id=statistics>
+
+    <div id=statistics class=statistics>
     {% include 'statistics.html' %}
     </div>
+    <br/>
+
     
     
     {% else %}
     <input id="show-login-button" type=button value="Login"/>
     <br/><br/>
     {% endif %}
-     
+    
+    <br/>
     <div id='calendar'></div>
     {% include 'login-dialog.html' %}
 </body>

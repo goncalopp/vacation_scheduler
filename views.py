@@ -16,9 +16,17 @@ def index():
 @app.route('/statistics')
 def statistics(getDict=False):
     au= current_user.is_authenticated()
-    available_days= UserYearlyArchive.getOrCreate(current_user).getAvailableVacations() if au else 0
-    scheduled_days= UserYearlyArchive.getOrCreate(current_user).getScheduledVacations() if au else 0
-    used_days= UserYearlyArchive.getOrCreate(current_user).getUsedVacations() if au else 0
+    try:
+        if not au:
+            raise ArchiveBeforeJoin
+        a= UserYearlyArchive.getOrCreate(current_user)
+        available_days= a.getAvailableVacations()
+        scheduled_days= a.getScheduledVacations()
+        used_days= a.getUsedVacations()
+    except ArchiveBeforeJoin:
+        available_days=0
+        scheduled_days=0
+        used_days=0
     d= { "available_days":  available_days, 
         "scheduled_days":   scheduled_days,
         "used_days":        used_days,

@@ -75,16 +75,19 @@ class UserYearlyArchive(db.Model):
     user = db.relationship('User')
     year= db.Column(db.Integer, primary_key=True)
     total_vacations= db.Column(db.Integer) #number of vacations available in this year
-    used_vacations= db.Column(db.Integer)
+    used_vacations= db.Column(db.Integer) #vacations scheduled this year
+    inherited_vacations= db.Column(db.Integer) #vacations inherited from last year
     
     def __init__(self, user, year):
         self.username= user.username
         self.year= year
         self.used_vacations= 0
         self.total_vacations= UserYearlyArchive.totalVacations(user, year)
+        self.inherited_vacations= UserYearlyArchive.inheritedVacations(user, year)
     
     @staticmethod
     def totalVacations(user, year):
+        '''number of vacations the user is given this year, counted at end of year'''
         if year>user.info.join_date.year:
             return user.info.vacations_per_year
         elif year==user.info.join_date.year:
@@ -95,7 +98,17 @@ class UserYearlyArchive(db.Model):
             return 0
     
     @staticmethod
+    def inheritedVacations(user, year):
+        try:
+            last= UserYearlyArchive.getOrCreate(user, year-1)
+            return last.getAvailableVacations()
+        except ArchiveBeforeJoin:
+            return 0
+    
+    @staticmethod
     def getOrCreate(user, year=datetime.now().year, commit=True):
+        if year<user.info.join_date.year:
+            raise ArchiveBeforeJoin
         q= UserYearlyArchive.query.filter( UserYearlyArchive.username == user.username ).filter( UserYearlyArchive.year == year ).all()
         if len(q)==0:
             info= UserYearlyArchive(user, year)
@@ -103,6 +116,7 @@ class UserYearlyArchive(db.Model):
             if commit:
                 db.session.commit()
         else:
+            assert len(q)==1 #at most 1 archive per user-year
             info= q[0]
         return info
     
@@ -115,7 +129,7 @@ class UserYearlyArchive(db.Model):
             n_months= (datetime.now().month-self.user.info.join_date.month)
             return n_months*self.user.info.vacations_per_month - self.used_vacations
         else:
-            return self.total_vacations - self.used_vacations
+            return self.inherited_vacations + self.total_vacations - self.used_vacations
     
     def getScheduledVacations(self):
         '''get the number of user scheduled vacations this year'''
@@ -126,6 +140,10 @@ class UserYearlyArchive(db.Model):
         '''gets the number of user scheduled vacations this year that
         have already occurred'''
         return self.used_vacations
+
+class ArchiveBeforeJoin( Exception ):
+    '''Tried to get or create archive from year before user joined the company'''
+    pass
 
 def delete_vacation(vacation, commit=True):
     uyc= UserYearlyArchive.getOrCreate(vacation.user, vacation.date.year, commit=False)

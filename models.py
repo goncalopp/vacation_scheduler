@@ -126,7 +126,11 @@ class UserYearlyArchive(db.Model):
             #user joined the company this year. We want to display
             #available vacations only up to the current date, not at the
             #end of current year
-            n_months= (datetime.now().month-self.user.info.join_date.month)
+            n=datetime.now().date()
+            if n.year!=self.year:
+                #we are querying a yearly archive in the past
+                n=date(year=self.year, month=12, day=31)
+            n_months= (n.month-self.user.info.join_date.month)
             return n_months*self.user.info.vacations_per_month - self.used_vacations
         else:
             return self.inherited_vacations + self.total_vacations - self.used_vacations

@@ -61,11 +61,17 @@ def events():
     if form.delete.data:
         if len(sameday_events)!=1:
             return "Tried to delete inexistent event (or more than one event on same day)", 400
-        delete_vacation(sameday_events[0])
+        try:
+            delete_vacation(sameday_events[0])
+        except ModifyPast:
+            return "Can't change events in the past", 400
     else:
         if len(sameday_events)!=0:
             return "Tried to add an event to a day with a event already in it.",400
-        add_vacation(date, current_user, vtype)
+        try:
+            add_vacation(date, current_user, vtype)
+        except ModifyPast:
+            return "Can't change events in the past", 400
     return ""
 
 

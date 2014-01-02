@@ -173,7 +173,13 @@ class ArchiveBeforeJoin( Exception ):
     '''Tried to get or create archive from year before user joined the company'''
     pass
 
+class ModifyPast(Exception):
+    '''Tried to modify vacations in the past'''
+    pass
+    
 def delete_vacation(vacation, commit=True):
+    if vacation.date<=datetime.now().date():
+        raise ModifyPast
     uyc= UserYearlyArchive.getOrCreate(vacation.user, vacation.date.year, commit=False)
     log.info("deleted %s", vacation)
     if vacation.type==0:
@@ -183,6 +189,8 @@ def delete_vacation(vacation, commit=True):
         db.session.commit()
 
 def add_vacation(date, user, vtype=0, commit=True):
+    if date<=datetime.now().date():
+        raise ModifyPast
     v= Vacation(date, user, vtype)
     db.session.add(v)
     uyc= UserYearlyArchive.getOrCreate(user, date.year, commit=False)

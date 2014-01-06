@@ -97,12 +97,12 @@ class UserYearlyArchive(db.Model):
     used_vacations= db.Column(db.Integer) #vacations scheduled this year
     inherited_vacations= db.Column(db.Integer) #vacations inherited from last year
     
-    def __init__(self, user, year):
+    def __init__(self, user, year, override_inherited=None):
         self.username= user.username
         self.year= year
         self.used_vacations= 0
         self.total_vacations= UserYearlyArchive.totalVacations(user, year)
-        self.inherited_vacations= UserYearlyArchive.inheritedVacations(user, year)
+        self.inherited_vacations= override_inherited or UserYearlyArchive.inheritedVacations(user, year)
         log.info("Created %s: %s", self, ", ".join(map(str,(
             self.used_vacations, 
             self.total_vacations, 

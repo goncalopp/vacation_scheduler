@@ -51,26 +51,32 @@ def events():
         return vacations_to_json( vs, current_user )
     log.info("POST events for %s", current_user)
     if not current_user.is_authenticated():
+        log.warn("User tried to add events without loggin")
         return "You need to login to add events", 403
     form= NewVacationForm()
     if not form.validate():
+        log.warn("Form validation error for %s", current_user)
         return form_errors_as_text(form),400
     date= string_to_date(form.date.data).date()
     vtype= form.type.data
     sameday_events= Vacation.query.filter( Vacation.date == date ).filter( Vacation.user == current_user ).all()
     if form.delete.data:
         if len(sameday_events)!=1:
+            log.warn("Bad deletion for %s", current_user)
             return "Tried to delete inexistent event (or more than one event on same day)", 400
         try:
             delete_vacation(sameday_events[0])
         except ModifyPast:
+            log.warn("Tried to change events in the past: %s", current_user)
             return "Can't change events in the past", 400
     else:
         if len(sameday_events)!=0:
+            log.warn("Add event to day with events already : %s", current_user)
             return "Tried to add an event to a day with a event already in it.",400
         try:
             add_vacation(date, current_user, vtype)
         except ModifyPast:
+            log.warn("Tried to change events in the past: %s", current_user)
             return "Can't change events in the past", 400
     return ""
 
@@ -84,13 +90,17 @@ def login():
         log.info("POST login")
         form= LoginForm()
         if form.validate():
-            user= User.query.get(form.username.data)
+            username= form.username.data
+            user= User.query.get(username)
             if user is None:
+                log.info("Tried to login inexistent user: %s", username)
                 return "No such user", 404
             if user.password!=form.password.data:
+                log.info("Got bad password for %s", username)
                 return "Bad password", 400
             log.info(unicode(user)+" logged in")
             login_user(user)
             return ""
+        log.warn("Login form validation error")
         return form_errors_as_text(form),400
 

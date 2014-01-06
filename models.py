@@ -46,10 +46,12 @@ class Vacation(db.Model):
 class User(db.Model):
     username= db.Column(db.String(30), primary_key=True)
     password= db.Column(db.String(30))
+    email=    db.Column(db.String(50))
     
-    def __init__(self, username, password):
+    def __init__(self, username, password, email=None):
         self.username= username
         self.password= password
+        self.email=    email
         log.info("Created %s", self)
     
     def is_anonymous(self):     #flask-login

@@ -2,7 +2,7 @@ from icalendar import Calendar #icalendar module
 import urllib
 from datetime import datetime
 
-from vacation_scheduler import User, add_vacation, app
+from vacation_scheduler import User, Vacation, add_vacation, app, db
 app.config['FORBID_MODIFY_PAST']=False
 
 URL="https://www.google.com/calendar/ical/en.portuguese%23holiday%40group.v.calendar.google.com/public/basic.ics"
@@ -24,6 +24,12 @@ def add_date(date):
         return
     print "adding date",date
     add_vacation(date, USER) 
+
+def delete_all_user_events():
+    existing= Vacation.query.filter(Vacation.user==USER).all()
+    for e in existing:
+        db.session.delete(e)
+    db.session.commit()
 
 if __name__=="__main__":
     main()

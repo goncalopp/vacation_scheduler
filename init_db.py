@@ -3,7 +3,8 @@ from vacation_scheduler import db, Vacation, User, UserVacationInfo, add_vacatio
 from misc import string_to_date
 
 import models
-models.FORBID_MODIFY_PAST=False
+from app import app
+app.config['FORBID_MODIFY_PAST']=False
 
 
 db.create_all()

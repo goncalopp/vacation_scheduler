@@ -2,6 +2,10 @@ from datetime import date
 from vacation_scheduler import db, Vacation, User, UserVacationInfo, add_vacation
 from misc import string_to_date
 
+import models
+models.FORBID_MODIFY_PAST=False
+
+
 db.create_all()
 
 alice= User("alice", "alice")

@@ -3,6 +3,7 @@
 from db import db
 from misc import string_to_date, unisafe
 from datetime import datetime,date
+from app import app
 
 from app_log import get_logger
 log= get_logger(__name__)
@@ -178,8 +179,9 @@ class ModifyPast(Exception):
     pass
     
 def delete_vacation(vacation, commit=True):
-    if vacation.date<=datetime.now().date():
-        raise ModifyPast
+    if app.config['FORBID_MODIFY_PAST']:
+        if vacation.date<=datetime.now().date():
+            raise ModifyPast
     uyc= UserYearlyArchive.getOrCreate(vacation.user, vacation.date.year, commit=False)
     log.info("deleted %s", vacation)
     if vacation.type==0:
@@ -189,8 +191,9 @@ def delete_vacation(vacation, commit=True):
         db.session.commit()
 
 def add_vacation(date, user, vtype=0, commit=True):
-    if date<=datetime.now().date():
-        raise ModifyPast
+    if app.config['FORBID_MODIFY_PAST']:
+        if date<=datetime.now().date():
+            raise ModifyPast
     v= Vacation(date, user, vtype)
     db.session.add(v)
     uyc= UserYearlyArchive.getOrCreate(user, date.year, commit=False)

@@ -91,7 +91,7 @@ class UserVacationInfo(db.Model):
 
 class UserYearlyArchive(db.Model):
     username = db.Column(db.String(30), db.ForeignKey('user.username'), primary_key=True)
-    user = db.relationship('User')
+    user = db.relationship('User', backref=db.backref('archives', lazy='dynamic'))
     year= db.Column(db.Integer, primary_key=True)
     total_vacations= db.Column(db.Integer) #number of vacations available in this year
     used_vacations= db.Column(db.Integer) #vacations scheduled this year

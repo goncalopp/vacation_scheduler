@@ -100,7 +100,7 @@ class UserYearlyArchive(db.Model):
     def __init__(self, user, year, override_inherited=None):
         self.username= user.username
         self.year= year
-        self.used_vacations= 0
+        self.used_vacations=  UserYearlyArchive.getScheduledVacationsFor(user, year)
         self.total_vacations= UserYearlyArchive.totalVacations(user, year)
         self.inherited_vacations= override_inherited or UserYearlyArchive.inheritedVacations(user, year)
         log.info("Created %s: %s", self, ", ".join(map(str,(
@@ -143,6 +143,13 @@ class UserYearlyArchive(db.Model):
             assert len(q)==1 #at most 1 archive per user-year
             info= q[0]
         return info
+
+    @staticmethod
+    def getScheduledVacationsFor(user, year):
+        '''get the number of user scheduled vacations this year'''
+        start_date, end_date= date(year=year, month=1, day=1), date(year=year+1, month=1, day=1)
+        return Vacation.query.filter( Vacation.user == user ).filter( Vacation.date >= start_date ).filter( Vacation.date < end_date ).filter( Vacation.type==0 ).count()
+    
     
     def getAvailableVacations(self):
         '''get the number of vacations the user has available (left) this year'''
@@ -161,9 +168,8 @@ class UserYearlyArchive(db.Model):
     
     def getScheduledVacations(self):
         '''get the number of user scheduled vacations this year'''
-        start_date, end_date= date(year=self.year, month=1, day=1), date(year=self.year+1, month=1, day=1)
-        return Vacation.query.filter( Vacation.user == self.user ).filter( Vacation.date >= start_date ).filter( Vacation.date < end_date ).filter( Vacation.type==0 ).count()
-    
+        return UserYearlyArchive.getScheduledVacationsFor(self.user, datetime.now().year)
+
     def getUsedVacations(self):
         '''gets the number of user scheduled vacations this year that
         have already occurred'''
@@ -179,29 +185,37 @@ class ArchiveBeforeJoin( Exception ):
 class ModifyPast(Exception):
     '''Tried to modify vacations in the past'''
     pass
-    
-def delete_vacation(vacation, commit=True):
+
+def update_used_vacations(vacation, commit=True, add=False, delete=False):
+    now= datetime.now().date()
     if app.config['FORBID_MODIFY_PAST']:
-        if vacation.date<=datetime.now().date():
+        if vacation.date<=now:
             raise ModifyPast
+    if vacation.type!=0:
+        return
+    if vacation.date.year > now.year:
+        return #Don't generate archives in the future
     uyc= UserYearlyArchive.getOrCreate(vacation.user, vacation.date.year, commit=False)
-    log.info("deleted %s", vacation)
-    if vacation.type==0:
+    db.session.add(uyc)
+    if add:
+        uyc.used_vacations+=1
+    if delete:
         uyc.used_vacations-=1
+    if commit and (add or delete):
+        db.session.commit()
+
+def delete_vacation(vacation, commit=True):
+    now= datetime.now().date()
+    update_used_vacations(vacation, commit=False, delete=True)
     db.session.delete(vacation)
+    log.info("deleted %s", vacation)
     if commit:
         db.session.commit()
 
 def add_vacation(date, user, vtype=0, commit=True):
-    if app.config['FORBID_MODIFY_PAST']:
-        if date<=datetime.now().date():
-            raise ModifyPast
     v= Vacation(date, user, vtype)
+    update_used_vacations(v, commit=False, add=True)
     db.session.add(v)
-    uyc= UserYearlyArchive.getOrCreate(user, date.year, commit=False)
-    if vtype==0:
-        uyc.used_vacations+=1
-    db.session.add(uyc)
     if commit:
         db.session.commit()
     log.info("created %s", v)

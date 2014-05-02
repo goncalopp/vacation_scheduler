@@ -35,8 +35,11 @@ def mail_user_info(user):
     sleep(1)
 
 def get_user(username):
-    u= User.query.filter(User.username==username).all()
-    assert len(u)==1
+    u= User.query.filter(User.username.contains(username)).all()
+    if len(u)>1:
+        raise Exception("more than one match: "+",".join(map(str,u)))
+    if len(u)==0:
+        raise Exception("No match")
     return u[0]
 
 

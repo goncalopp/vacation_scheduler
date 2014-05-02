@@ -173,7 +173,9 @@ class UserYearlyArchive(db.Model):
     def getUsedVacations(self):
         '''gets the number of user scheduled vacations this year that
         have already occurred'''
-        return self.used_vacations
+        #this currently returns a fake result, since there's no way
+        #to efficiently calculate this without additional structures.
+        return self.used_vacations 
     
     def __repr__(self):
         return "UserYearlyArchive<"+",".join(map(str, (self.user, self.year)))+">"

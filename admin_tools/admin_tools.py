@@ -10,7 +10,7 @@ import random
 import string
 from time import sleep
 
-USER_INFO_FILE 'data/users.txt' #TSV, each line is (name, mail, leftover)
+USER_INFO_FILE= 'data/users.txt' #TSV, each line is (name, mail, leftover)
 EMAIL_DOMAIN= "domain.tld"
 NO_JOIN_DATE= "2013-12-31"
 

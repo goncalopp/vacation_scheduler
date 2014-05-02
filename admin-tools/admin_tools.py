@@ -1,6 +1,7 @@
 from io import open
 from datetime import date
-from vacation_scheduler import db, Vacation, User, UserVacationInfo, UserYearlyArchive 
+import vacation_scheduler
+from models import Vacation, User, UserVacationInfo, UserYearlyArchive 
 from misc import string_to_date, unisafe
 
 from mail_user import mail_user

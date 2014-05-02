@@ -2,7 +2,11 @@ from icalendar import Calendar #icalendar module
 import urllib
 from datetime import datetime
 
-from vacation_scheduler import User, Vacation, add_vacation, app, db
+import vacation_scheduler
+from app import app
+from db import db
+from models import User, Vacation, add_vacation
+
 app.config['FORBID_MODIFY_PAST']=False
 
 URL="https://www.google.com/calendar/ical/en.portuguese%23holiday%40group.v.calendar.google.com/public/basic.ics"
@@ -11,6 +15,7 @@ if not USER:
     raise Exception("no such user")
 
 def main():
+    print "Getting data from URL"
     cal_str= urllib.urlopen(URL).read()
     c= Calendar.from_ical(cal_str )
     for x in c.walk():
@@ -32,4 +37,5 @@ def delete_all_user_events():
     db.session.commit()
 
 if __name__=="__main__":
+    delete_all_user_events()
     main()

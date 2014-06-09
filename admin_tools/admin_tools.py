@@ -3,6 +3,7 @@ from datetime import date
 import vacation_scheduler
 from models import Vacation, User, UserVacationInfo, UserYearlyArchive 
 from misc import string_to_date, unisafe
+from db import db
 
 from mail_user import mail_user
 

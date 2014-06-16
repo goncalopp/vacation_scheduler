@@ -186,12 +186,19 @@ class ArchiveBeforeJoin( Exception ):
 
 class ModifyPast(Exception):
     '''Tried to modify vacations in the past'''
+    def __init__(self):
+        super(Exception, self).__init__( self.__class__.__name__ )
+
+class ModifyPastYear( ModifyPast ):
     pass
 
 def update_used_vacations(vacation, commit=True, add=False, delete=False):
     now= datetime.now().date()
+    if app.config['FORBID_MODIFY_PAST_YEAR']:
+        if vacation.date.year<now.year:
+            raise ModifyPastYear
     if app.config['FORBID_MODIFY_PAST']:
-        if vacation.date<=now:
+        if vacation.date<now:
             raise ModifyPast
     if vacation.type!=0:
         return

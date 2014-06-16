@@ -66,18 +66,18 @@ def events():
             return "Tried to delete inexistent event (or more than one event on same day)", 400
         try:
             delete_vacation(sameday_events[0])
-        except ModifyPast:
-            log.warn("Tried to change events in the past: %s", current_user)
-            return "Can't change events in the past", 400
+        except ModifyPast as e:
+            log.warn("Tried to change events in the past: %s (%s)", current_user, e)
+            return "Can't change events in the past ({0})".format(e), 400
     else:
         if len(sameday_events)!=0:
             log.warn("Add event to day with events already : %s", current_user)
             return "Tried to add an event to a day with a event already in it.",400
         try:
             add_vacation(date, current_user, vtype)
-        except ModifyPast:
-            log.warn("Tried to change events in the past: %s", current_user)
-            return "Can't change events in the past", 400
+        except ModifyPast as e:
+            log.warn("Tried to change events in the past: %s (%s)", current_user, e)
+            return "Can't change events in the past ({0})".format(e), 400
     return ""
 
 

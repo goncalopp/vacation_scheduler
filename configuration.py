@@ -6,6 +6,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.sqlite'
 app.config['DEBUG'] = True
 app.config['SECRET_KEY'] = 'LTjzysF0RfSPmmBd'
 app.config['FORBID_MODIFY_PAST']=True
+app.config['FORBID_MODIFY_PAST_YEAR']=True
 
 import flask_wtf
 csrf_protector =flask_wtf.csrf.CsrfProtect(app)

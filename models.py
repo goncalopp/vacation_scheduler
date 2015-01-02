@@ -178,7 +178,7 @@ class UserYearlyArchive(db.Model):
         return self.used_vacations 
     
     def __repr__(self):
-        return "UserYearlyArchive<"+",".join(map(str, (self.user, self.year)))+">"
+        return "UserYearlyArchive<"+",".join(map(str, (self.username, self.year)))+">"
 
 class ArchiveBeforeJoin( Exception ):
     '''Tried to get or create archive from year before user joined the company'''

@@ -20,14 +20,13 @@ def index():
 @app.route('/statistics')
 def statistics(getDict=False):
     log.info("GET statistics for %s", current_user)
-    au= current_user.is_authenticated()
     try:
-        if not au:
+        if not current_user.is_authenticated():
             raise ArchiveBeforeJoin
-        a= UserYearlyArchive.getOrCreate(current_user)
-        available_days= a.getAvailableVacations()
-        scheduled_days= a.getScheduledVacations()
-        used_days= a.getUsedVacations()
+        ar= UserYearlyArchive.getOrCreate(current_user)
+        available_days= getAvailableVacations( ar )
+        scheduled_days= getScheduledVacations( ar )
+        used_days=      getUsedVacations( current_user )
     except ArchiveBeforeJoin:
         available_days=0
         scheduled_days=0

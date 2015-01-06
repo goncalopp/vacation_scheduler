@@ -2,7 +2,7 @@
 
 from db import db
 from misc import string_to_date, unisafe
-from datetime import datetime,date
+from datetime import datetime,date,timedelta
 from app import app
 
 from app_log import get_logger
@@ -74,7 +74,7 @@ class UserVacationInfo(db.Model):
     user = db.relationship('User', backref=db.backref('info', uselist=False))
     join_date= db.Column(db.Date) #when did the user join the company
     vacations_per_year= db.Column(db.Integer)
-    vacations_per_month= db.Column(db.Integer) #for first year
+    vacations_per_month= db.Column(db.Integer) #for first year. OBSOLETE, see vacationsGivenUntil
     
     def __init__(self, user, join_date, vacations_per_year, vacations_per_month):
         self.join_date= string_to_date(join_date)
@@ -88,44 +88,69 @@ class UserVacationInfo(db.Model):
     
     def __repr__(self):
         return "UserVacationInfo<"+str(self.user)+">"
+    
+    def vacationsGivenUntil(self, date, closed_interval=True):
+        '''number of vacations the user is given in the period from the
+        beggining of date.year up to (and including, iff 
+        closed_interval) date'''
+        if date.year > self.join_date.year:
+            return self.vacations_per_year
+        elif date.year < self.join_date.year:
+            return 0
+        else: #year==self.join_date.year
+            if closed_interval: #remaining of code assumes open_interval
+                year= date.year
+                date+= timedelta( days=1 )
+                year_overflow= date.year!=year
+            else:
+                year_overflow=False
+            
+            current_month= 13 if year_overflow else date.month
+            n_months= max(0,current_month - self.join_date.month-1) #n of COMPLETE months of work (don't count join and current month)
+            n_months_vacations= n_months * 2
+            if date.month==self.join_date.month and not year_overflow:
+                n_joinmonth_vacations=0
+            else:
+                n_joinmonth_vacations= 2 if self.join_date.day <=1 else 1 if self.join_date.day <=15 else 0
+            n_currentmonth_vacations= 0
+            result= n_months_vacations + n_joinmonth_vacations + n_currentmonth_vacations
+            return min( self.vacations_per_year, result )
+    
+    def vacationsGivenOnYear( self, year ):
+        return self.vacationsGivenUntil( datetime(year=year, month=12, day=31), closed_interval=True )
 
 class UserYearlyArchive(db.Model):
     username = db.Column(db.String(30), db.ForeignKey('user.username'), primary_key=True)
     user = db.relationship('User', backref=db.backref('archives', lazy='dynamic'))
     year= db.Column(db.Integer, primary_key=True)
-    total_vacations= db.Column(db.Integer) #number of vacations available in this year
-    used_vacations= db.Column(db.Integer) #vacations scheduled this year
+    total_vacations= db.Column(db.Integer) #number of vacations made available to the user, measured at year's end
+    used_vacations= db.Column(db.Integer)  #vacations scheduled this year
     inherited_vacations= db.Column(db.Integer) #vacations inherited from last year
     
-    def __init__(self, user, year, override_inherited=None):
+    def __init__(self, user, year, override_inherited=None, override_total=None):
+        self.user= user #this is done in order to make the field available in this method
         self.username= user.username
         self.year= year
-        self.used_vacations=  UserYearlyArchive.getScheduledVacationsFor(user, year)
-        self.total_vacations= UserYearlyArchive.totalVacations(user, year)
-        self.inherited_vacations= override_inherited or UserYearlyArchive.inheritedVacations(user, year)
-        log.info("Created %s: %s", self, ", ".join(map(str,(
-            self.used_vacations, 
-            self.total_vacations, 
-            self.inherited_vacations,
-            ))))
+        self.regenerateArchive( creation=True, override_inherited=override_inherited, override_total=override_total )
+        log.info("Created {}".format(self))
     
+    def regenerateArchive(self, override_inherited=None, override_total=None, creation=False, commit=True):
+        '''recalculate cached values'''
+        if not creation:
+            log.info("Regenerating archive. Old: {}".format(self))
+        self.used_vacations=  queryYearlyVacations( self.user, self.year).count()
+        self.total_vacations= self.user.info.vacationsGivenOnYear( self.year ) if override_total is None else override_total
+        self.inherited_vacations= UserYearlyArchive.calculateInheritedVacations(self.user, self.year) if override_inherited is None else override_inherited
+        if not creation:
+            log.info("Regenerating archive. New: {}".format(self))
+        if commit and not creation:
+            db.session.commit()
+
     @staticmethod
-    def totalVacations(user, year):
-        '''number of vacations the user is given this year, counted at end of year'''
-        if year>user.info.join_date.year:
-            return user.info.vacations_per_year
-        elif year==user.info.join_date.year:
-            n_months= 12 - user.info.join_date.month #n of months of work. don't count join month
-            return n_months * user.info.vacations_per_month
-        else:
-            #year before user join date
-            return 0
-    
-    @staticmethod
-    def inheritedVacations(user, year):
+    def calculateInheritedVacations(user, year):
         try:
-            last= UserYearlyArchive.getOrCreate(user, year-1)
-            return last.getAvailableVacations()
+            last_archive= UserYearlyArchive.getOrCreate(user, year-1) # this line makes this function indirectly recursive
+            return getAvailableVacations( last_archive )
         except ArchiveBeforeJoin:
             return 0
     
@@ -143,43 +168,22 @@ class UserYearlyArchive(db.Model):
             assert len(q)==1 #at most 1 archive per user-year
             info= q[0]
         return info
-
-    @staticmethod
-    def getScheduledVacationsFor(user, year):
-        '''get the number of user scheduled vacations this year'''
-        start_date, end_date= date(year=year, month=1, day=1), date(year=year+1, month=1, day=1)
-        return Vacation.query.filter( Vacation.user == user ).filter( Vacation.date >= start_date ).filter( Vacation.date < end_date ).filter( Vacation.type==0 ).count()
     
-    
-    def getAvailableVacations(self):
-        '''get the number of vacations the user has available (left) this year'''
-        if self.user.info.join_date.year==self.year:
-            #user joined the company this year. We want to display
-            #available vacations only up to the current date, not at the
-            #end of current year
-            n=datetime.now().date()
-            if n.year!=self.year:
-                #we are querying a yearly archive in the past
-                n=date(year=self.year, month=12, day=31)
-            n_months= (n.month-self.user.info.join_date.month)
-            return n_months*self.user.info.vacations_per_month - self.used_vacations
-        else:
-            return self.inherited_vacations + self.total_vacations - self.used_vacations
-    
-    def getScheduledVacations(self):
-        '''get the number of user scheduled vacations this year'''
-        return UserYearlyArchive.getScheduledVacationsFor(self.user, datetime.now().year)
-
-    def getUsedVacations(self):
-        '''gets the number of user scheduled vacations this year that
-        have already occurred'''
-        #this currently returns a fake result, since there's no way
-        #to efficiently calculate this without additional structures.
-        return self.used_vacations 
-    
+    def __str__(self):
+        a= ",".join(map(str, (self.username, self.year)))
+        b= ", ".join(map(str,(
+            self.used_vacations, 
+            self.total_vacations, 
+            self.inherited_vacations,
+            )))
+        return "UserYearlyArchive<{}|{}>".format(a,b)
     def __repr__(self):
         return "UserYearlyArchive<"+",".join(map(str, (self.username, self.year)))+">"
 
+class InvalidArchiveAccessDate( Exception ):
+    '''Tried to get data from a archive that is not yet available'''
+    pass
+    
 class ArchiveBeforeJoin( Exception ):
     '''Tried to get or create archive from year before user joined the company'''
     pass
@@ -191,6 +195,39 @@ class ModifyPast(Exception):
 
 class ModifyPastYear( ModifyPast ):
     pass
+
+
+def queryYearlyVacations(user, year, end_date=None):
+    '''get the (query representing) user scheduled vacations this year'''
+    start_date= date(year=year, month=1, day=1)
+    if end_date is None:
+        end_date= date(year=year+1, month=1, day=1)
+    else:
+        assert end_date.year == year
+        end_date+=timedelta(days=1)
+    return Vacation.query.filter( Vacation.user == user ).filter( Vacation.date >= start_date ).filter( Vacation.date < end_date ).filter( Vacation.type==0 )
+        
+def getScheduledVacations( archive ):
+    return archive.used_vacations
+
+def getUsedVacations(user):
+    n=datetime.now().date()
+    return queryYearlyVacations(user, n.year, n).count()
+    
+def getAvailableVacations( archive ):
+    inherited=  archive.inherited_vacations
+    given=  vacations( archive )
+    used=       archive.used_vacations
+    return inherited + given - used
+
+def vacations( archive ):
+    '''vacations given in the archive's year. 
+    If the archive is for the current year, will only return vacations
+    available up to the current day (i.e.: not counted at end of year)'''
+    if archive.year < datetime.now().year:
+        return archive.total_vacations  
+    else: 
+        return archive.user.info.vacationsGivenUntil( datetime.now() )
 
 def update_used_vacations(vacation, commit=True, add=False, delete=False):
     now= datetime.now().date()

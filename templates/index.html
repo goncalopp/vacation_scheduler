@@ -1,37 +1,15 @@
+<!DOCTYPE html>
 <html>
 <head>
+    <title>ferias.collab</title>
     <meta name="csrf_token" content="{{ csrf_token() }}" />
     <meta name="authenticated_user" content="{{ current_user.username }}" />
     <meta name="login_form_username_id" content="{{ login_form.username.id }}" />
     <meta name="login_form_password_id" content="{{ login_form.password.id }}" />
     
-    
-    <link rel='stylesheet' type='text/css' href='static/fullcalendar/fullcalendar.css' />
-    <script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
-    <script type='text/javascript' src='static/fullcalendar/fullcalendar.js'></script>
-    
     <link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.min.css" />
+    <link rel='stylesheet' type='text/css' href='static/fullcalendar/fullcalendar.css' />
     <link rel="stylesheet" href="static/site_style.css" />
-    <script src="http://code.jquery.com/ui/1.10.3/jquery-ui.min.js"></script>
-    <script src="static/site_js.js"></script>
-
-    <script>
-    $(document).ready(
-    function() 
-        {
-        $( "#show-login-button" ).button()
-        $( "#show-login-button" ).click(show_login_dialog)
-        setup_login_dialog()
-        $('#calendar').fullCalendar(
-            {
-            dayClick: click_day,
-            eventClick: click_event,
-            events: '/events' //json url
-            }
-            )
-        }
-    );
-    </script>
     
 </head>
 <body>
@@ -61,5 +39,23 @@
     <br/>
     <div id='calendar'></div>
     {% include 'login-dialog.html' %}
+
+    <script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+    <script src="http://code.jquery.com/ui/1.10.3/jquery-ui.min.js"></script>
+    <script type='text/javascript' src='static/fullcalendar/fullcalendar.js'></script>
+    <script src="static/site_js.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            $("#show-login-button").button();
+            $("#show-login-button").click(show_login_dialog);
+            setup_login_dialog();
+            $('#calendar').fullCalendar({
+                dayClick: click_day,
+                eventClick: click_event,
+                events: '/events' //json url
+            });
+        });
+    </script>
 </body>
 </html>
